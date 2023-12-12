@@ -31,7 +31,21 @@ namespace
 using ControllerReferenceMsg =
   mecanum_drive_controller::MecanumDriveController::ControllerReferenceMsg;
 
+using ControllerReferenceUnstampedMsg =
+  mecanum_drive_controller::MecanumDriveController::ControllerReferenceUnstampedMsg;
+
 // called from RT control loop
+void reset_controller_reference_unstamped_msg(
+  const std::shared_ptr<ControllerReferenceUnstampedMsg> & msg)
+{
+  msg->linear.x = std::numeric_limits<double>::quiet_NaN();
+  msg->linear.y = std::numeric_limits<double>::quiet_NaN();
+  msg->linear.z = std::numeric_limits<double>::quiet_NaN();
+  msg->angular.x = std::numeric_limits<double>::quiet_NaN();
+  msg->angular.y = std::numeric_limits<double>::quiet_NaN();
+  msg->angular.z = std::numeric_limits<double>::quiet_NaN();
+}
+
 void reset_controller_reference_msg(
   const std::shared_ptr<ControllerReferenceMsg> & msg,
   const std::shared_ptr<rclcpp_lifecycle::LifecycleNode> & node)
@@ -44,6 +58,7 @@ void reset_controller_reference_msg(
   msg->twist.angular.y = std::numeric_limits<double>::quiet_NaN();
   msg->twist.angular.z = std::numeric_limits<double>::quiet_NaN();
 }
+
 
 }  // namespace
 
@@ -104,20 +119,33 @@ controller_interface::CallbackReturn MecanumDriveController::on_configure(
   subscribers_qos.best_effort();
 
   // Reference Subscriber
+  use_stamped_vel_ = params_.use_stamped_vel;
   ref_timeout_ = rclcpp::Duration::from_seconds(params_.reference_timeout);
-  ref_subscriber_ = get_node()->create_subscription<ControllerReferenceMsg>(
-    "~/reference", subscribers_qos,
+  if (use_stamped_vel_)
+  {
+    ref_subscriber_ = get_node()->create_subscription<ControllerReferenceMsg>(
+    "~/cmd_vel", subscribers_qos,
     std::bind(&MecanumDriveController::reference_callback, this, std::placeholders::_1));
 
-  std::shared_ptr<ControllerReferenceMsg> msg = std::make_shared<ControllerReferenceMsg>();
-  reset_controller_reference_msg(msg, get_node());
-  input_ref_.writeFromNonRT(msg);
+    std::shared_ptr<ControllerReferenceMsg> msg = std::make_shared<ControllerReferenceMsg>();
+    reset_controller_reference_msg(msg, get_node());
+    input_ref_.writeFromNonRT(msg);
+  }
+  else
+  {
+    ref_unstamped_subscriber_ = get_node()->create_subscription<ControllerReferenceUnstampedMsg>(
+      "~/cmd_vel_unstamped", subscribers_qos,
+      std::bind(&MecanumDriveController::reference_unstamped_callback, this, std::placeholders::_1));
+    std::shared_ptr<ControllerReferenceUnstampedMsg> msg = std::make_shared<ControllerReferenceUnstampedMsg>();
+    reset_controller_reference_unstamped_msg(msg);
+    input_ref_unstamped_.writeFromNonRT(msg);
+  }
 
   try
   {
     // Odom state publisher
     odom_s_publisher_ =
-      get_node()->create_publisher<OdomStateMsg>("~/odometry", rclcpp::SystemDefaultsQoS());
+      get_node()->create_publisher<OdomStateMsg>("~/odom", rclcpp::SystemDefaultsQoS());
     rt_odom_state_publisher_ = std::make_unique<OdomStatePublisher>(odom_s_publisher_);
   }
   catch (const std::exception & e)
@@ -223,6 +251,11 @@ void MecanumDriveController::reference_callback(const std::shared_ptr<Controller
   }
 }
 
+void MecanumDriveController::reference_unstamped_callback(const std::shared_ptr<ControllerReferenceUnstampedMsg> msg)
+{
+  input_ref_unstamped_.writeFromNonRT(msg);
+}
+
 controller_interface::InterfaceConfiguration
 MecanumDriveController::command_interface_configuration() const
 {
@@ -285,8 +318,13 @@ controller_interface::CallbackReturn MecanumDriveController::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   // Set default value in command
-  reset_controller_reference_msg(*(input_ref_.readFromRT()), get_node());
-
+  if(use_stamped_vel_){
+    reset_controller_reference_msg(*(input_ref_.readFromRT()), get_node());
+  }
+  else
+  {
+    reset_controller_reference_unstamped_msg(*(input_ref_unstamped_.readFromRT()));
+  }
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
@@ -300,25 +338,41 @@ controller_interface::CallbackReturn MecanumDriveController::on_deactivate(
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
-controller_interface::return_type MecanumDriveController::update_reference_from_subscribers(
-  const rclcpp::Time & time, const rclcpp::Duration & /*period*/)
+controller_interface::return_type MecanumDriveController::update_reference_from_subscribers()
 {
-  auto current_ref = *(input_ref_.readFromRT());
-  const auto age_of_last_command = time - (current_ref)->header.stamp;
-
-  // send message only if there is no timeout
-  if (age_of_last_command <= ref_timeout_ || ref_timeout_ == rclcpp::Duration::from_seconds(0))
+  if(use_stamped_vel_)
   {
-    if (
-      !std::isnan(current_ref->twist.linear.x) && !std::isnan(current_ref->twist.linear.y) &&
-      !std::isnan(current_ref->twist.angular.z))
-    {
-      reference_interfaces_[0] = current_ref->twist.linear.x;
-      reference_interfaces_[1] = current_ref->twist.linear.y;
-      reference_interfaces_[2] = current_ref->twist.angular.z;
+    auto current_ref = *(input_ref_.readFromRT());
 
-      if (ref_timeout_ == rclcpp::Duration::from_seconds(0))
+    // send message only if there is no timeout
+    if (ref_timeout_ == rclcpp::Duration::from_seconds(0))
+    {
+      if (
+        !std::isnan(current_ref->twist.linear.x) && !std::isnan(current_ref->twist.linear.y) &&
+        !std::isnan(current_ref->twist.angular.z))
       {
+        reference_interfaces_[0] = current_ref->twist.linear.x;
+        reference_interfaces_[1] = current_ref->twist.linear.y;
+        reference_interfaces_[2] = current_ref->twist.angular.z;
+
+        if (ref_timeout_ == rclcpp::Duration::from_seconds(0))
+        {
+          current_ref->twist.linear.x = std::numeric_limits<double>::quiet_NaN();
+          current_ref->twist.linear.y = std::numeric_limits<double>::quiet_NaN();
+          current_ref->twist.angular.z = std::numeric_limits<double>::quiet_NaN();
+        }
+      }
+    }
+    else
+    {
+      if (
+        !std::isnan(current_ref->twist.linear.x) && !std::isnan(current_ref->twist.linear.y) &&
+        !std::isnan(current_ref->twist.angular.z))
+      {
+        reference_interfaces_[0] = 0.0;
+        reference_interfaces_[1] = 0.0;
+        reference_interfaces_[2] = 0.0;
+
         current_ref->twist.linear.x = std::numeric_limits<double>::quiet_NaN();
         current_ref->twist.linear.y = std::numeric_limits<double>::quiet_NaN();
         current_ref->twist.angular.z = std::numeric_limits<double>::quiet_NaN();
@@ -327,20 +381,21 @@ controller_interface::return_type MecanumDriveController::update_reference_from_
   }
   else
   {
-    if (
-      !std::isnan(current_ref->twist.linear.x) && !std::isnan(current_ref->twist.linear.y) &&
-      !std::isnan(current_ref->twist.angular.z))
-    {
-      reference_interfaces_[0] = 0.0;
-      reference_interfaces_[1] = 0.0;
-      reference_interfaces_[2] = 0.0;
+    auto current_ref_unstamped = *(input_ref_unstamped_.readFromRT());
 
-      current_ref->twist.linear.x = std::numeric_limits<double>::quiet_NaN();
-      current_ref->twist.linear.y = std::numeric_limits<double>::quiet_NaN();
-      current_ref->twist.angular.z = std::numeric_limits<double>::quiet_NaN();
+    if (
+        !std::isnan(current_ref_unstamped->linear.x) && !std::isnan(current_ref_unstamped->linear.y) &&
+        !std::isnan(current_ref_unstamped->angular.z))
+    {
+      reference_interfaces_[0] = current_ref_unstamped->linear.x;
+      reference_interfaces_[1] = current_ref_unstamped->linear.y;
+      reference_interfaces_[2] = current_ref_unstamped->angular.z;
+
+      current_ref_unstamped->linear.x = std::numeric_limits<double>::quiet_NaN();
+      current_ref_unstamped->linear.y = std::numeric_limits<double>::quiet_NaN();
+      current_ref_unstamped->angular.z = std::numeric_limits<double>::quiet_NaN();
     }
   }
-
   return controller_interface::return_type::OK;
 }
 
@@ -464,6 +519,10 @@ controller_interface::return_type MecanumDriveController::update_and_write_comma
     controller_state_publisher_->msg_.back_left_wheel_velocity = state_interfaces_[1].get_value();
     controller_state_publisher_->msg_.back_right_wheel_velocity = state_interfaces_[2].get_value();
     controller_state_publisher_->msg_.front_right_wheel_velocity = state_interfaces_[3].get_value();
+    // controller_state_publisher_->msg_.front_left_wheel_velocity = command_interfaces_[0].get_value();
+    // controller_state_publisher_->msg_.back_left_wheel_velocity = command_interfaces_[1].get_value();
+    // controller_state_publisher_->msg_.back_right_wheel_velocity = command_interfaces_[2].get_value();
+    // controller_state_publisher_->msg_.front_right_wheel_velocity = command_interfaces_[3].get_value();
     controller_state_publisher_->msg_.reference_velocity.linear.x = reference_interfaces_[0];
     controller_state_publisher_->msg_.reference_velocity.linear.y = reference_interfaces_[1];
     controller_state_publisher_->msg_.reference_velocity.angular.z = reference_interfaces_[2];

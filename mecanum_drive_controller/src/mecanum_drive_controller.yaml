@@ -1,4 +1,10 @@
 mecanum_drive_controller:
+  use_stamped_vel: {
+    type: bool,
+    default_value: true,
+    description: "Use stamp from input velocity message to calculate how old the command actually is.",
+  }
+
   reference_timeout: {
     type: double,
     default_value: 0.0,
@@ -49,7 +55,7 @@ mecanum_drive_controller:
 
     wheels_radius: {
       type: double,
-      default_value: 0.0,
+      default_value: 1.0,
       description: "Wheel's radius.",
       read_only: false,
     }
