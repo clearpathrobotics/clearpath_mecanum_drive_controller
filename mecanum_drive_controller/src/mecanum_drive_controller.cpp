@@ -121,6 +121,8 @@ controller_interface::CallbackReturn MecanumDriveController::on_configure(
   // Reference Subscriber
   use_stamped_vel_ = params_.use_stamped_vel;
   ref_timeout_ = rclcpp::Duration::from_seconds(params_.reference_timeout);
+  cmd_timeout_ = rclcpp::Duration::from_seconds(params_.command_timeout);
+  cmd_timestamp_ = get_node()->now();
   if (use_stamped_vel_)
   {
     ref_subscriber_ = get_node()->create_subscription<ControllerReferenceMsg>(
@@ -253,6 +255,7 @@ void MecanumDriveController::reference_callback(const std::shared_ptr<Controller
 
 void MecanumDriveController::reference_unstamped_callback(const std::shared_ptr<ControllerReferenceUnstampedMsg> msg)
 {
+  cmd_timestamp_ = get_node()->now();
   input_ref_unstamped_.writeFromNonRT(msg);
 }
 
@@ -477,10 +480,13 @@ controller_interface::return_type MecanumDriveController::update_and_write_comma
   }
   else
   {
-    command_interfaces_[0].set_value(0.0);
-    command_interfaces_[1].set_value(0.0);
-    command_interfaces_[2].set_value(0.0);
-    command_interfaces_[3].set_value(0.0);
+    if(cmd_timeout_ < get_node()->now() - cmd_timestamp_)
+    {
+      command_interfaces_[0].set_value(0.0);
+      command_interfaces_[1].set_value(0.0);
+      command_interfaces_[2].set_value(0.0);
+      command_interfaces_[3].set_value(0.0);
+    }
   }
 
   // Publish odometry message

@@ -105,6 +105,8 @@ protected:
   realtime_tools::RealtimeBuffer<std::shared_ptr<ControllerReferenceMsg>> input_ref_;
   realtime_tools::RealtimeBuffer<std::shared_ptr<ControllerReferenceUnstampedMsg>> input_ref_unstamped_;
   rclcpp::Duration ref_timeout_ = rclcpp::Duration::from_seconds(0.0);
+  rclcpp::Duration cmd_timeout_ = rclcpp::Duration::from_seconds(1.0);
+  rclcpp::Time cmd_timestamp_;
 
   using OdomStatePublisher = realtime_tools::RealtimePublisher<OdomStateMsg>;
   rclcpp::Publisher<OdomStateMsg>::SharedPtr odom_s_publisher_;
