@@ -27,17 +27,17 @@
 #include "hardware_interface/loaned_command_interface.hpp"
 #include "hardware_interface/loaned_state_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
-#include "mecanum_drive_controller/mecanum_drive_controller.hpp"
+#include "clearpath_mecanum_drive_controller/clearpath_mecanum_drive_controller.hpp"
 #include "rclcpp/parameter_value.hpp"
 #include "rclcpp/time.hpp"
 #include "rclcpp/utilities.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 
-using ControllerStateMsg = mecanum_drive_controller::MecanumDriveController::ControllerStateMsg;
+using ControllerStateMsg = clearpath_mecanum_drive_controller::MecanumDriveController::ControllerStateMsg;
 using ControllerReferenceMsg =
-  mecanum_drive_controller::MecanumDriveController::ControllerReferenceMsg;
-using TfStateMsg = mecanum_drive_controller::MecanumDriveController::TfStateMsg;
-using OdomStateMsg = mecanum_drive_controller::MecanumDriveController::OdomStateMsg;
+  clearpath_mecanum_drive_controller::MecanumDriveController::ControllerReferenceMsg;
+using TfStateMsg = clearpath_mecanum_drive_controller::MecanumDriveController::TfStateMsg;
+using OdomStateMsg = clearpath_mecanum_drive_controller::MecanumDriveController::OdomStateMsg;
 
 namespace
 {
@@ -47,7 +47,7 @@ constexpr auto NODE_ERROR = controller_interface::CallbackReturn::ERROR;
 // namespace
 
 // subclassing and friending so we can access member variables
-class TestableMecanumDriveController : public mecanum_drive_controller::MecanumDriveController
+class TestableMecanumDriveController : public clearpath_mecanum_drive_controller::MecanumDriveController
 {
   FRIEND_TEST(MecanumDriveControllerTest, when_controller_is_configured_expect_all_parameters_set);
   FRIEND_TEST(
@@ -84,7 +84,7 @@ public:
   controller_interface::CallbackReturn on_configure(
     const rclcpp_lifecycle::State & previous_state) override
   {
-    auto ret = mecanum_drive_controller::MecanumDriveController::on_configure(previous_state);
+    auto ret = clearpath_mecanum_drive_controller::MecanumDriveController::on_configure(previous_state);
     // Only if on_configure is successful create subscription
     if (ret == CallbackReturn::SUCCESS)
     {
@@ -97,7 +97,7 @@ public:
     const rclcpp_lifecycle::State & previous_state) override
   {
     auto ref_itfs = on_export_reference_interfaces();
-    return mecanum_drive_controller::MecanumDriveController::on_activate(previous_state);
+    return clearpath_mecanum_drive_controller::MecanumDriveController::on_activate(previous_state);
   }
 
   /**
@@ -144,11 +144,11 @@ public:
 
     command_publisher_node_ = std::make_shared<rclcpp::Node>("command_publisher");
     command_publisher_ = command_publisher_node_->create_publisher<ControllerReferenceMsg>(
-      "/test_mecanum_drive_controller/reference", rclcpp::SystemDefaultsQoS());
+      "/test_mecanum_drive_controller/cmd_vel", rclcpp::SystemDefaultsQoS());
 
     odom_s_publisher_node_ = std::make_shared<rclcpp::Node>("odom_s_publisher");
     odom_s_publisher_ = odom_s_publisher_node_->create_publisher<OdomStateMsg>(
-      "/test_mecanum_drive_controller/odometry", rclcpp::SystemDefaultsQoS());
+      "/test_mecanum_drive_controller/odom", rclcpp::SystemDefaultsQoS());
 
     tf_odom_s_publisher_node_ = std::make_shared<rclcpp::Node>("tf_odom_s_publisher");
     tf_odom_s_publisher_ = tf_odom_s_publisher_node_->create_publisher<TfStateMsg>(

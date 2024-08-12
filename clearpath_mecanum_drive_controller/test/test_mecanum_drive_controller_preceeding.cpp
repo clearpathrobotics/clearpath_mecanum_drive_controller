@@ -20,9 +20,9 @@
 #include <utility>
 #include <vector>
 
-using mecanum_drive_controller::NR_CMD_ITFS;
-using mecanum_drive_controller::NR_REF_ITFS;
-using mecanum_drive_controller::NR_STATE_ITFS;
+using clearpath_mecanum_drive_controller::NR_CMD_ITFS;
+using clearpath_mecanum_drive_controller::NR_REF_ITFS;
+using clearpath_mecanum_drive_controller::NR_STATE_ITFS;
 
 class MecanumDriveControllerTest
 : public MecanumDriveControllerFixture<TestableMecanumDriveController>

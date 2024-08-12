@@ -22,9 +22,9 @@
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
-using mecanum_drive_controller::NR_CMD_ITFS;
-using mecanum_drive_controller::NR_REF_ITFS;
-using mecanum_drive_controller::NR_STATE_ITFS;
+using clearpath_mecanum_drive_controller::NR_CMD_ITFS;
+using clearpath_mecanum_drive_controller::NR_REF_ITFS;
+using clearpath_mecanum_drive_controller::NR_STATE_ITFS;
 
 class MecanumDriveControllerTest
 : public MecanumDriveControllerFixture<TestableMecanumDriveController>
@@ -170,6 +170,8 @@ TEST_F(MecanumDriveControllerTest, when_update_is_called_expect_status_message)
   ASSERT_EQ(controller_->on_activate(rclcpp_lifecycle::State()), NODE_SUCCESS);
 
   controller_->reference_interfaces_[0] = 1.5;
+  controller_->reference_interfaces_[1] = 0.0;
+  controller_->reference_interfaces_[2] = 0.0;
 
   ControllerStateMsg msg;
   subscribe_to_controller_status_execute_update_and_get_messages(msg);
