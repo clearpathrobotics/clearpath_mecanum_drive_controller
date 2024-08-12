@@ -1,4 +1,4 @@
-mecanum_drive_controller:
+clearpath_mecanum_drive_controller:
   use_stamped_vel: {
     type: bool,
     default_value: true,
@@ -61,7 +61,7 @@ mecanum_drive_controller:
 
     wheels_radius: {
       type: double,
-      default_value: 1.0,
+      default_value: 0.0,
       description: "Wheel's radius.",
       read_only: false,
     }

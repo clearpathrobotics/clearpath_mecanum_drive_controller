@@ -1,13 +1,11 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>mecanum_drive_controller</name>
+  <name>clearpath_mecanum_drive_controller</name>
   <version>0.0.0</version>
-  <description> Implementation of mecanum drive controller for 4 wheel drive.
+  <description> Clearpath fork of mecanum drive controller for 4 wheel drive.
   </description>
-  <maintainer email="denis.stogl@stoglrobotics.de">Dr.-Ing. Denis Štogl</maintainer>
-  <maintainer email="bence.magyar.robotics@gmail.com">Bence Magyar</maintainer>
-  <maintainer email="giridhar6937@gmail.com">Giridhar Bukka</maintainer>
+  <maintainer email="lcamero@clearpathrobotics.com">Luis Camero</maintainer>
 
   <author email="denis.stogl@stoglrobotics.de">Dr.-Ing. Denis Štogl</author>
   <author email="giridhar6937@gmail.com">Giridhar Bukka</author>

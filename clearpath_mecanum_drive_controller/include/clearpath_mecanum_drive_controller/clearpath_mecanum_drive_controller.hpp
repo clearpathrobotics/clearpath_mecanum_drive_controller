@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MECANUM_DRIVE_CONTROLLER__MECANUM_DRIVE_CONTROLLER_HPP_
-#define MECANUM_DRIVE_CONTROLLER__MECANUM_DRIVE_CONTROLLER_HPP_
+#ifndef CLEARPATH_MECANUM_DRIVE_CONTROLLER__CLEARPATH_MECANUM_DRIVE_CONTROLLER_HPP_
+#define CLEARPATH_MECANUM_DRIVE_CONTROLLER__CLEARPATH_MECANUM_DRIVE_CONTROLLER_HPP_
 
 #include <chrono>
 #include <cmath>
@@ -24,9 +24,9 @@
 #include <vector>
 
 #include "controller_interface/chainable_controller_interface.hpp"
-#include "mecanum_drive_controller/odometry.hpp"
-#include "mecanum_drive_controller/visibility_control.h"
-#include "mecanum_drive_controller_parameters.hpp"
+#include "clearpath_mecanum_drive_controller/odometry.hpp"
+#include "clearpath_mecanum_drive_controller/visibility_control.h"
+#include "clearpath_mecanum_drive_controller_parameters.hpp"
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 #include "realtime_tools/realtime_buffer.h"
@@ -37,7 +37,7 @@
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "tf2_msgs/msg/tf_message.hpp"
-namespace mecanum_drive_controller
+namespace clearpath_mecanum_drive_controller
 {
 // name constants for state interfaces
 static constexpr size_t NR_STATE_ITFS = 4;
@@ -51,34 +51,34 @@ static constexpr size_t NR_REF_ITFS = 3;
 class MecanumDriveController : public controller_interface::ChainableControllerInterface
 {
 public:
-  MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
+  CLEARATH_MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
   MecanumDriveController();
 
-  MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
+  CLEARATH_MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
   controller_interface::CallbackReturn on_init() override;
 
-  MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
+  CLEARATH_MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
   controller_interface::InterfaceConfiguration command_interface_configuration() const override;
 
-  MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
+  CLEARATH_MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
   controller_interface::InterfaceConfiguration state_interface_configuration() const override;
 
-  MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
+  CLEARATH_MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
   controller_interface::CallbackReturn on_configure(
     const rclcpp_lifecycle::State & previous_state) override;
 
-  MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
+  CLEARATH_MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
   controller_interface::CallbackReturn on_activate(
     const rclcpp_lifecycle::State & previous_state) override;
 
-  MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
+  CLEARATH_MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
   controller_interface::CallbackReturn on_deactivate(
     const rclcpp_lifecycle::State & previous_state) override;
 
-  MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
+  CLEARATH_MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
   controller_interface::return_type update_reference_from_subscribers() override;
 
-  MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
+  CLEARATH_MECANUM_DRIVE_CONTROLLER__VISIBILITY_PUBLIC
   controller_interface::return_type update_and_write_commands(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
@@ -89,8 +89,8 @@ public:
   using ControllerStateMsg = control_msgs::msg::MecanumDriveControllerState;
 
 protected:
-  std::shared_ptr<mecanum_drive_controller::ParamListener> param_listener_;
-  mecanum_drive_controller::Params params_;
+  std::shared_ptr<clearpath_mecanum_drive_controller::ParamListener> param_listener_;
+  clearpath_mecanum_drive_controller::Params params_;
 
   // used for chained controller
   std::vector<std::string> state_joint_names_;
@@ -131,7 +131,7 @@ protected:
 
 private:
   // callback for topic interface
-  MECANUM_DRIVE_CONTROLLER__VISIBILITY_LOCAL
+  CLEARATH_MECANUM_DRIVE_CONTROLLER__VISIBILITY_LOCAL
   void reference_callback(const std::shared_ptr<ControllerReferenceMsg> msg);
   void reference_unstamped_callback(const std::shared_ptr<ControllerReferenceUnstampedMsg> msg);
 
@@ -140,6 +140,6 @@ private:
   double velocity_in_center_frame_angular_z_;  // [rad/s]
 };
 
-}  // namespace mecanum_drive_controller
+}  // namespace clearpath_mecanum_drive_controller
 
-#endif  // MECANUM_DRIVE_CONTROLLER__MECANUM_DRIVE_CONTROLLER_HPP_
+#endif  // CLEARPATH_MECANUM_DRIVE_CONTROLLER__CLEARPATH_MECANUM_DRIVE_CONTROLLER_HPP_

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mecanum_drive_controller/mecanum_drive_controller.hpp"
+#include "clearpath_mecanum_drive_controller/clearpath_mecanum_drive_controller.hpp"
 
 #include <limits>
 #include <memory>
@@ -29,10 +29,10 @@ namespace
 {  // utility
 
 using ControllerReferenceMsg =
-  mecanum_drive_controller::MecanumDriveController::ControllerReferenceMsg;
+  clearpath_mecanum_drive_controller::MecanumDriveController::ControllerReferenceMsg;
 
 using ControllerReferenceUnstampedMsg =
-  mecanum_drive_controller::MecanumDriveController::ControllerReferenceUnstampedMsg;
+  clearpath_mecanum_drive_controller::MecanumDriveController::ControllerReferenceUnstampedMsg;
 
 // called from RT control loop
 void reset_controller_reference_unstamped_msg(
@@ -62,7 +62,7 @@ void reset_controller_reference_msg(
 
 }  // namespace
 
-namespace mecanum_drive_controller
+namespace clearpath_mecanum_drive_controller
 {
 MecanumDriveController::MecanumDriveController()
 : controller_interface::ChainableControllerInterface()
@@ -73,7 +73,7 @@ controller_interface::CallbackReturn MecanumDriveController::on_init()
 {
   try
   {
-    param_listener_ = std::make_shared<mecanum_drive_controller::ParamListener>(get_node());
+    param_listener_ = std::make_shared<clearpath_mecanum_drive_controller::ParamListener>(get_node());
   }
   catch (const std::exception & e)
   {
@@ -344,12 +344,22 @@ controller_interface::CallbackReturn MecanumDriveController::on_deactivate(
 
 controller_interface::return_type MecanumDriveController::update_reference_from_subscribers()
 {
+  // Move functionality to the `update_and_write_commands` because of the missing arguments in
+  // humble - otherwise issues with multiple time-sources might happen when working with simulators
+
+  return controller_interface::return_type::OK;
+}
+
+controller_interface::return_type MecanumDriveController::update_and_write_commands(
+  const rclcpp::Time & time, const rclcpp::Duration & period)
+{
   if(use_stamped_vel_)
   {
+    // Moved from update_reference_from_subscribers
     auto current_ref = *(input_ref_.readFromRT());
-
+    const auto age_of_last_command = time - (current_ref)->header.stamp;
     // send message only if there is no timeout
-    if (ref_timeout_ == rclcpp::Duration::from_seconds(0))
+    if (age_of_last_command <= ref_timeout_ || ref_timeout_ == rclcpp::Duration::from_seconds(0))
     {
       if (
         !std::isnan(current_ref->twist.linear.x) && !std::isnan(current_ref->twist.linear.y) &&
@@ -386,7 +396,6 @@ controller_interface::return_type MecanumDriveController::update_reference_from_
   else
   {
     auto current_ref_unstamped = *(input_ref_unstamped_.readFromRT());
-
     if (
         !std::isnan(current_ref_unstamped->linear.x) && !std::isnan(current_ref_unstamped->linear.y) &&
         !std::isnan(current_ref_unstamped->angular.z))
@@ -400,12 +409,7 @@ controller_interface::return_type MecanumDriveController::update_reference_from_
       current_ref_unstamped->angular.z = std::numeric_limits<double>::quiet_NaN();
     }
   }
-  return controller_interface::return_type::OK;
-}
 
-controller_interface::return_type MecanumDriveController::update_and_write_commands(
-  const rclcpp::Time & time, const rclcpp::Duration & period)
-{
   // FORWARD KINEMATICS (odometry).
   double wheel_front_left_vel = state_interfaces_[0].get_value();
   double wheel_back_left_vel = state_interfaces_[1].get_value();
@@ -543,10 +547,10 @@ controller_interface::return_type MecanumDriveController::update_and_write_comma
   return controller_interface::return_type::OK;
 }
 
-}  // namespace mecanum_drive_controller
+}  // namespace clearpath_mecanum_drive_controller
 
 #include "pluginlib/class_list_macros.hpp"
 
 PLUGINLIB_EXPORT_CLASS(
-  mecanum_drive_controller::MecanumDriveController,
+  clearpath_mecanum_drive_controller::MecanumDriveController,
   controller_interface::ChainableControllerInterface)

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef MECANUM_DRIVE_CONTROLLER__ODOMETRY_HPP_
-#define MECANUM_DRIVE_CONTROLLER__ODOMETRY_HPP_
+#ifndef CLEARPATH_MECANUM_DRIVE_CONTROLLER__ODOMETRY_HPP_
+#define CLEARPATH_MECANUM_DRIVE_CONTROLLER__ODOMETRY_HPP_
 
 #include "geometry_msgs/msg/twist.hpp"
 #include "realtime_tools/realtime_buffer.h"
@@ -21,7 +21,7 @@
 
 #define PLANAR_POINT_DIM 3
 
-namespace mecanum_drive_controller
+namespace clearpath_mecanum_drive_controller
 {
 /// \brief The Odometry class handles odometry readings
 /// (2D pose and velocity with related timestamp)
@@ -100,4 +100,4 @@ private:
 
 }  // namespace mecanum_drive_controller
 
-#endif  // MECANUM_DRIVE_CONTROLLER__ODOMETRY_HPP_ */
+#endif  // CLEARPATH_MECANUM_DRIVE_CONTROLLER__ODOMETRY_HPP_ */

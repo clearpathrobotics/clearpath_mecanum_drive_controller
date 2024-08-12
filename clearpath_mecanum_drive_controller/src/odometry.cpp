@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "mecanum_drive_controller/odometry.hpp"
+#include "clearpath_mecanum_drive_controller/odometry.hpp"
 
 #include "tf2/transform_datatypes.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
-namespace mecanum_drive_controller
+namespace clearpath_mecanum_drive_controller
 {
 Odometry::Odometry()
 : timestamp_(0.0),
@@ -121,4 +121,4 @@ void Odometry::setWheelsParams(
   wheels_radius_ = wheels_radius;
 }
 
-}  // namespace mecanum_drive_controller
+}  // namespace clearpath_mecanum_drive_controller
