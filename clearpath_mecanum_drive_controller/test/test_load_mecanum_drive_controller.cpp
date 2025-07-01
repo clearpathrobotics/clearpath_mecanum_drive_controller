@@ -26,13 +26,17 @@ TEST(TestLoadMecanumDriveController, when_loading_controller_expect_no_exception
 {
   rclcpp::init(0, nullptr);
 
+  auto clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  auto logger = rclcpp::get_logger("test_logger");
+
   std::shared_ptr<rclcpp::Executor> executor =
     std::make_shared<rclcpp::executors::SingleThreadedExecutor>();
 
   controller_manager::ControllerManager cm(
     std::make_unique<hardware_interface::ResourceManager>(
-      ros2_control_test_assets::minimal_robot_urdf),
-    executor, "test_controller_manager");
+      ros2_control_test_assets::minimal_robot_urdf, clock, logger, true, 1),
+    executor,
+    "test_controller_manager");
 
   ASSERT_NE(
     cm.load_controller(
