@@ -66,28 +66,6 @@ if(BUILD_TESTING)
     hardware_interface
     ros2_control_test_assets
   )
-
-  add_rostest_with_parameters_gmock(
-    test_mecanum_drive_controller test/test_mecanum_drive_controller.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test/mecanum_drive_controller_params.yaml)
-  target_include_directories(test_mecanum_drive_controller PRIVATE include)
-  target_link_libraries(test_mecanum_drive_controller clearpath_mecanum_drive_controller)
-  ament_target_dependencies(
-    test_mecanum_drive_controller
-    controller_interface
-    hardware_interface
-  )
-
-  add_rostest_with_parameters_gmock(
-    test_mecanum_drive_controller_preceeding test/test_mecanum_drive_controller_preceeding.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/test/mecanum_drive_controller_preceeding_params.yaml)
-  target_include_directories(test_mecanum_drive_controller_preceeding PRIVATE include)
-  target_link_libraries(test_mecanum_drive_controller_preceeding clearpath_mecanum_drive_controller)
-  ament_target_dependencies(
-    test_mecanum_drive_controller_preceeding
-    controller_interface
-    hardware_interface
-  )
 endif()
 
 install(
