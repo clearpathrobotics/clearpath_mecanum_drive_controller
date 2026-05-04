@@ -344,11 +344,13 @@ controller_interface::CallbackReturn MecanumDriveController::on_deactivate(
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
-controller_interface::return_type MecanumDriveController::update_reference_from_subscribers()
+controller_interface::return_type MecanumDriveController::update_reference_from_subscribers(const rclcpp::Time & time,
+  const rclcpp::Duration & period)
 {
   // Move functionality to the `update_and_write_commands` because of the missing arguments in
   // humble - otherwise issues with multiple time-sources might happen when working with simulators
-
+  (void)time;
+  (void)period;
   return controller_interface::return_type::OK;
 }
 
